@@ -39,17 +39,86 @@ example : min a b = min b a := by
     apply min_le_left
 
 example : max a b = max b a := by
-  sorry
+  have h : ∀ x y : ℝ, max x y ≤ max y x := by
+    intro x y
+    apply max_le
+    · apply le_max_right
+    · apply le_max_left
+  apply le_antisymm
+  · apply h
+  · apply h
+
+
 example : min (min a b) c = min a (min b c) := by
-  sorry
+  have h₁ : ∀ x y z : ℝ, min (min x y) z ≤ x := by
+    intro x y z
+    apply le_trans
+    · apply min_le_left
+    · apply min_le_left
+
+  have h₂ : ∀ x y z : ℝ, min (min x y) z ≤ y := by
+    intro x y z
+    apply le_trans
+    · apply min_le_left
+    · apply min_le_right
+
+  have h₃ : ∀ x y z : ℝ, min (min x y) z ≤ z := by
+    intro x y z
+    apply min_le_right
+
+  have h₄ : ∀ x y z : ℝ, min x (min y z) ≤ x := by
+    intro x y z
+    apply min_le_left
+
+  have h₅ : ∀ x y z : ℝ, min x (min y z) ≤ y := by
+    intro x y z
+    apply le_trans
+    · apply min_le_right
+    · apply min_le_left
+
+  have h₆ : ∀ x y z : ℝ, min x (min y z) ≤ z := by
+    intro x y z
+    apply le_trans
+    · apply min_le_right
+    · apply min_le_right
+
+  apply le_antisymm
+  · apply le_min
+    · apply h₁
+    · apply le_min
+      · apply h₂
+      · apply h₃
+  · apply le_min
+    · apply le_min
+      · apply h₄
+      · apply h₅
+    · apply h₆
+
+#check add_neg_cancel_right
+
 theorem aux : min a b + c ≤ min (a + c) (b + c) := by
-  sorry
+  apply le_min
+  · apply add_le_add_right
+    apply min_le_left
+  · apply add_le_add_right
+    apply min_le_right
+
 example : min a b + c = min (a + c) (b + c) := by
-  sorry
+  apply le_antisymm
+  · apply aux
+  · have h : min (a + c) (b + c) + (-c) ≤ min (a + c + (-c)) (b + c + (-c)) := by
+      apply aux (a + c) (b + c) (-c)
+    rw [add_neg_cancel_right, add_neg_cancel_right] at h
+    linarith
+
 #check (abs_add : ∀ a b : ℝ, |a + b| ≤ |a| + |b|)
 
-example : |a| - |b| ≤ |a - b| :=
-  sorry
+example : |a| - |b| ≤ |a - b| := by
+  have h : |a - b + b| ≤ |a - b| + |b| := by
+    apply abs_add (a - b) b
+  rw [sub_add_cancel] at h
+  linarith
+
 end
 
 section
@@ -66,7 +135,14 @@ example : x ∣ x ^ 2 := by
   apply dvd_mul_left
 
 example (h : x ∣ w) : x ∣ y * (x * z) + x ^ 2 + w ^ 2 := by
-  sorry
+  apply dvd_add
+  · apply dvd_add
+    · apply dvd_mul_of_dvd_right
+      apply dvd_mul_right
+    · apply dvd_mul_left
+  · apply dvd_trans h
+    apply dvd_mul_left
+
 end
 
 section
@@ -78,7 +154,10 @@ variable (m n : ℕ)
 #check (Nat.lcm_zero_left n : Nat.lcm 0 n = 0)
 
 example : Nat.gcd m n = Nat.gcd n m := by
-  sorry
+  apply Nat.dvd_antisymm
+  repeat
+  · apply Nat.dvd_gcd
+    · apply Nat.gcd_dvd_right
+    · apply Nat.gcd_dvd_left
+
 end
-
-
