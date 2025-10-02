@@ -118,10 +118,10 @@ example (mf : Monotone f) (mg : Monotone g) : Monotone fun x ↦ f x + g x :=
   fun a b aleb ↦ add_le_add (mf aleb) (mg aleb)
 
 example {c : ℝ} (mf : Monotone f) (nnc : 0 ≤ c) : Monotone fun x ↦ c * f x :=
-  sorry
+  fun a b aleb ↦ mul_le_mul_of_nonneg_left (mf aleb) nnc
 
 example (mf : Monotone f) (mg : Monotone g) : Monotone fun x ↦ f (g x) :=
-  sorry
+  fun a b aleb ↦ mf (mg aleb)
 
 def FnEven (f : ℝ → ℝ) : Prop :=
   ∀ x, f x = f (-x)
@@ -137,13 +137,31 @@ example (ef : FnEven f) (eg : FnEven g) : FnEven fun x ↦ f x + g x := by
 
 
 example (of : FnOdd f) (og : FnOdd g) : FnEven fun x ↦ f x * g x := by
-  sorry
+  intro x
+  calc
+    (fun x ↦ f x * g x) x = f x * g x := rfl
+    _ = (- f (-x)) * (- g (-x)) := by rw [of, og]
+    _ = f (-x) * g (-x) := by rw [neg_mul_neg]
+    _ = (fun x ↦ f x * g x) (-x) := by rfl
+
 
 example (ef : FnEven f) (og : FnOdd g) : FnOdd fun x ↦ f x * g x := by
-  sorry
+  intro x
+  calc
+    (fun x ↦ f x * g x) x = f x * g x := rfl
+    _ = f (-x) * (- g (-x)) := by rw [ef, og]
+    _ = - (f (-x) * g (-x)) := by rw [mul_neg]
+    _ = -(fun x ↦ f x * g x) (-x) := by rfl
+
 
 example (ef : FnEven f) (og : FnOdd g) : FnEven fun x ↦ f (g x) := by
-  sorry
+  intro x
+  calc
+    (fun x ↦ f (g x)) x = f (g x) := rfl
+    _ = f (- (- g (-x))) := by rw [ef, og]
+    _ = f (g (-x)) := by rw [neg_neg]
+    _ = (fun x ↦ f (g x)) (-x) := rfl
+
 
 end
 
@@ -157,8 +175,15 @@ example : s ⊆ s := by
 
 theorem Subset.refl : s ⊆ s := fun x xs ↦ xs
 
-theorem Subset.trans : r ⊆ s → s ⊆ t → r ⊆ t := by
-  sorry
+theorem Subset.trans : r ⊆ s → s ⊆ t → r ⊆ t :=
+  fun hrs hst x hx ↦ hst (hrs hx)
+  -- by
+  -- intro h1 h2
+  -- intro x hx
+  -- apply h2
+  -- apply h1
+  -- exact hx
+
 
 end
 
@@ -166,11 +191,12 @@ section
 variable {α : Type*} [PartialOrder α]
 variable (s : Set α) (a b : α)
 
+
 def SetUb (s : Set α) (a : α) :=
   ∀ x, x ∈ s → x ≤ a
 
 example (h : SetUb s a) (h' : a ≤ b) : SetUb s b :=
-  sorry
+  fun x hxs ↦ le_trans (h x hxs) h'
 
 end
 
@@ -183,12 +209,16 @@ example (c : ℝ) : Injective fun x ↦ x + c := by
   exact (add_left_inj c).mp h'
 
 example {c : ℝ} (h : c ≠ 0) : Injective fun x ↦ c * x := by
-  sorry
+  intro x₁ x₂ h'
+  exact (mul_right_inj' h).mp h'
 
 variable {α : Type*} {β : Type*} {γ : Type*}
 variable {g : β → γ} {f : α → β}
 
 example (injg : Injective g) (injf : Injective f) : Injective fun x ↦ g (f x) := by
-  sorry
+  intro x₁ x₂ h'
+  apply injf
+  apply injg
+  exact h'
 
 end
